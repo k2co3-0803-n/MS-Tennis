@@ -69,14 +69,7 @@ void main() {
                         state = OPENING;
                 } else if (state == OPENING) {
                         state = PLAY;
-			for (int i = 0; i < 250; i++) beep(1);
-                        for (int i = 0; i < 250; i++) beep(2);
-                        for (int i = 0; i < 250; i++) beep(3);
-                        for (int i = 0; i < 250; i++) beep(4);
-                        for (int i = 0; i < 250; i++) beep(5);
-                        for (int i = 0; i < 250; i++) beep(6);
-                        for (int i = 0; i < 250; i++) beep(7);
-                        for (int i = 0; i < 250; i++) beep(8);
+			play_song();
                 } else if (state == PLAY) {
                         play();
                         state = ENDING;
@@ -272,4 +265,15 @@ void beep(int mode) {
         lcd_wait(len);
         *iob_ptr = 0;
         lcd_wait(len);
+}
+
+void play_song() {
+        for (int i = 0; i < 250; i++) beep(1);
+                for (int i = 0; i < 250; i++) beep(2);
+                for (int i = 0; i < 250; i++) beep(3);
+                for (int i = 0; i < 250; i++) beep(4);
+                for (int i = 0; i < 250; i++) beep(5);
+                for (int i = 0; i < 250; i++) beep(6);
+                for (int i = 0; i < 250; i++) beep(7);
+                for (int i = 0; i < 250; i++) beep(8);
 }
