@@ -1,0 +1,11 @@
+*.o
+*.dump
+*.dat
+*.asm
+*.log
++.jog
+*.xpc
+*.wdf
+*.bit
+*.txt
+*.xdc

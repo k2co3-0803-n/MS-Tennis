@@ -39,13 +39,11 @@ void interrupt_handler() {
 		/* Display a ball */
 		posx = (cnt < 12) ? cnt : 23 - cnt;		
 		show_ball(posx, posy); 
-	        for (;;){
-		      p1_pos = ((*rte_ptr1) >> 2) % 8;
-		      p2_pos = ((*rte_ptr2) >> 2) % 8;
-		      show_player(p1_pos, p2_pos);
-		      *led_ptr = kypd_scan();
-		      
-		}
+		p1_pos = ((*rte_ptr1) >> 2) % 8;
+		p2_pos = ((*rte_ptr2) >> 2) % 8;
+		show_player(p1_pos, p2_pos);
+		*led_ptr = kypd_scan();
+		
 		if (++cnt >= 24) {
 			cnt = 0;
 		}
@@ -69,14 +67,14 @@ void main() {
                         state = OPENING;
                 } else if (state == OPENING) {
                         state = PLAY;
-			for (int i = 0; i < 250; i++) beep(1);
-                        for (int i = 0; i < 250; i++) beep(2);
-                        for (int i = 0; i < 250; i++) beep(3);
-                        for (int i = 0; i < 250; i++) beep(4);
-                        for (int i = 0; i < 250; i++) beep(5);
-                        for (int i = 0; i < 250; i++) beep(6);
-                        for (int i = 0; i < 250; i++) beep(7);
-                        for (int i = 0; i < 250; i++) beep(8);
+			//for (int i = 0; i < 250; i++) beep(1);
+            //            for (int i = 0; i < 250; i++) beep(2);
+            //            for (int i = 0; i < 250; i++) beep(3);
+            //            for (int i = 0; i < 250; i++) beep(4);
+            //            for (int i = 0; i < 250; i++) beep(5);
+            //            for (int i = 0; i < 250; i++) beep(6);
+            //            for (int i = 0; i < 250; i++) beep(7);
+            //            for (int i = 0; i < 250; i++) beep(8);
                 } else if (state == PLAY) {
                         play();
                         state = ENDING;
