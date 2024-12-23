@@ -10,23 +10,28 @@
 //***********************************************************************
 `timescale 1ns/1ps
 module fpga_top (
-	input			clk_125mhz,
-	input		[3:0]	sw,
-	input		[3:0]	btn,
-	output 	reg	[3:0]	led,
-	output		[7:0]	lcd,
-	output	reg	[7:0]	ioa,
+	input 		 clk_125mhz,
+	input [3:0] 	 sw,
+	input [3:0] 	 btn,
+	output reg [3:0] led,
+	output [7:0] 	 lcd,
+	//output reg [7:0] ioa,
 	//output	reg	[7:0]	iob
-	output	reg [3:0]	iob_lo,
-	input		[3:0]	iob_hi
+	input [7:0] 	 ioa,
+	output reg [3:0] iob_lo,
+	input [3:0] 	 iob_hi, 
+	input [7:0] 	 ioc,
+	output reg [7:0]     iod
 );
 
-wire	[31:0]	pc, instr, readdata, readdata0, readdata1, writedata, dataadr, readdata4;
+wire	[31:0]	pc, instr, readdata, readdata0, readdata1, writedata, dataadr,readdata4, readdata5, readdata6;
 wire	[3:0]	byteen;
-wire		reset;
-wire		memwrite, memtoregM, swc, cs0, cs1, cs2, cs3, cs4, cs5, irq;
+wire		reset, buzz;
+wire		memwrite, memtoregM, swc, cs0, cs1, cs2, cs3, cs4, cs5, cs6, cs7, irq;
+wire    [9:0] 	rte1, rte2;   
 reg		clk_62p5mhz;
-
+reg [7:0] 	mode;
+   
 /* Reset when two buttons are pushed */
 assign	reset	= btn[0] & btn[1];
 
@@ -45,8 +50,11 @@ assign	cs1	= dataadr == 32'hff04;
 assign	cs2	= dataadr == 32'hff08;
 assign	cs3 = dataadr == 32'hff0c;
 assign	cs4 = dataadr == 32'hff14; 
-
-assign	readdata	= cs0 ? readdata0 : (cs1 ? readdata1 : (cs4 ? readdata4 : 0));
+assign  cs5 = dataadr == 32'hff18;
+assign  cs6 = dataadr == 32'hff1c;
+assign  cs7 = dataadr == 32'hff24;
+   
+assign	readdata	= cs0 ? readdata0 : cs1 ? readdata1 : cs4 ? readdata4 : cs5 ? readdata5 : cs6 ? readdata6  : 0 ;
 
 /* SPI module (@62.5MHz) */
 spi spi (clk_62p5mhz, reset, cs3 && memwrite, writedata[9:0], lcd);
@@ -58,18 +66,44 @@ mem mem (clk_125mhz, reset, cs0 & memwrite, pc[15:2], dataadr[15:2], instr,
 /* Timer module (@62.5MHz) */
 timer timer (clk_62p5mhz, reset, irq);
 
+/*Rotary_enc module (@62.5MHz) */
+rotary_enc1 rotary_enc1 (clk_62p5mhz, reset, ioa, rte1);
+rotary_enc2 rotary_enc2 (clk_62p5mhz, reset, ioc, rte2);
+
+/* buzz module */
+beep beep (clk_125mhz, reset, mode, buzz);
+   
 /* cs1 */
 assign	readdata1	= {24'h0, btn, sw};
 /* cs2 */
 always @ (posedge clk_62p5mhz or posedge reset)
 	if (reset) led <= 0;
 	else if (cs2 && memwrite) led <= writedata[3:0];
+/* cs3 */
+//always @ (posedge clk_62p5mhz or posedge reset)
+//	if (reset) ioa <= 0;
+//	else if (cs4 && memwrite) ioa <= writedata[7:0];
+//assign readdata3 = {24'h0, ioa};
 /* cs4 */
-assign readdata4 = {24'h0, iob_hi, iob_lo};
-always @ (posedge clk_62p5mhz or posedge reset)
-	if (reset) iob_lo <= 0;
-	else if (cs4 && memwrite) iob_lo <= writedata[3:0];
+assign readdata4= {22'h0, rte1};
 
+/* cs5 */
+assign  readdata5   = {24'h0, iob_hi, iob_lo};
+always @ (posedge clk_62p5mhz or posedge reset)
+        if (reset)                      iob_lo  <= 0;
+        else if (cs5 && memwrite)       iob_lo  <= writedata[3:0];
+   
+/* cs6 */
+assign readdata6= {22'h0, rte2};
+
+/* cs7 */
+always @ (posedge clk_62p5mhz or posedge reset)
+        if (reset)                      mode    <= 0;
+        else if (cs7 && memwrite)       mode    <= writedata[7:0];
+always @ (posedge clk_62p5mhz or posedge reset)
+        if (reset)                      iod     <= 0;
+        else                            iod[0]  <= buzz;
+   
 endmodule
 
 //***********************************************************************
@@ -208,4 +242,144 @@ always @(posedge clk or posedge reset)
 			cnt2	<= 0;
 		end else
 			cnt2	<= cnt2 + 1;
+endmodule // spi
+
+module rotary_enc1 (
+	input clk_62p5mhz,
+	input reset,
+	input [3:0] rte_in,
+	output [9:0] rte_out
+);
+reg	[7:0]	count;
+wire		A, B;
+reg		prevA, prevB;
+assign	{B, A} = rte_in[1:0];
+assign	rte_out	= {count, rte_in[3:2]};
+always @ (posedge clk_62p5mhz or posedge reset)
+	if (reset) begin
+		count	<= 128;
+		prevA	<= 0;
+		prevB	<= 0;
+	end else
+		case ({prevA, A, prevB, B})
+		4'b0100: begin
+			count <= count + 1;
+			prevA <= A;
+		end
+		4'b1101: begin
+			count <= count + 1;
+			prevB <= B;
+		end
+		4'b1011: begin
+			count <= count + 1;
+			prevA <= A;
+		end
+		4'b0010: begin
+			count <= count + 1;
+			prevB <= B;
+		end
+		4'b0001: begin
+			count <= count - 1;
+			prevB <= B;
+		end
+		4'b0111: begin
+			count <= count - 1;
+			prevA <= A;
+		end
+		4'b1110: begin
+			count <= count - 1;
+			prevB <= B;
+		end
+		4'b1000: begin
+			count <= count - 1;
+			prevA <= A;
+		end
+		endcase
+endmodule // rotary_enc1
+
+module rotary_enc2 (
+	input clk_62p5mhz,
+	input reset,
+	input [3:0] rte_in,
+	output [9:0] rte_out
+);
+reg	[7:0]	count;
+wire		A, B;
+reg		prevA, prevB;
+assign	{B, A} = rte_in[1:0];
+assign	rte_out	= {count, rte_in[3:2]};
+always @ (posedge clk_62p5mhz or posedge reset)
+	if (reset) begin
+		count	<= 128;
+		prevA	<= 0;
+		prevB	<= 0;
+	end else
+		case ({prevA, A, prevB, B})
+		4'b0100: begin
+			count <= count + 1;
+			prevA <= A;
+		end
+		4'b1101: begin
+			count <= count + 1;
+			prevB <= B;
+		end
+		4'b1011: begin
+			count <= count + 1;
+			prevA <= A;
+		end
+		4'b0010: begin
+			count <= count + 1;
+			prevB <= B;
+		end
+		4'b0001: begin
+			count <= count - 1;
+			prevB <= B;
+		end
+		4'b0111: begin
+			count <= count - 1;
+			prevA <= A;
+		end
+		4'b1110: begin
+			count <= count - 1;
+			prevB <= B;
+		end
+		4'b1000: begin
+			count <= count - 1;
+			prevA <= A;
+		end
+		endcase
+endmodule // rotary_enc2
+
+module beep (
+       input clk_125mhz,
+       input reset,
+       input [7:0] mode,
+       output buzz
+);
+reg  [31:0] count;
+wire [31:0] interval;
+assign interval =      (mode ==  1) ? 14931 * 2: /* C  */
+                       (mode ==  2) ? 14093 * 2: /* C# */
+                       (mode ==  3) ? 13302 * 2: /* D  */
+                       (mode ==  4) ? 12555 * 2: /* D# */
+                       (mode ==  5) ? 11850 * 2: /* E  */
+                       (mode ==  6) ? 11185 * 2: /* F  */
+                       (mode ==  7) ? 10558 * 2: /* F# */
+                       (mode ==  8) ?  9965 * 2: /* G  */
+                       (mode ==  9) ?  9406 * 2: /* G# */
+                       (mode == 10) ?  8878 * 2: /* A  */
+                       (mode == 11) ?  8380 * 2: /* A# */
+                       (mode == 12) ?  7909 * 2: /* B  */
+                       (mode == 13) ?  7465 * 2: /* C  */
+		       0;
+assign buzz = (mode > 0) && (count < interval / 2) ? 1 : 0;
+always @ (posedge clk_125mhz or posedge reset)
+       if (reset)
+               count   <= 0;
+       else if (mode > 0)
+               if (count < interval)
+                       count   <= count + 1;
+               else
+                       count   <= 0;
 endmodule
+

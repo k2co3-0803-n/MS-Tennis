@@ -71,7 +71,7 @@ rotary_enc1 rotary_enc1 (clk_62p5mhz, reset, ioa, rte1);
 rotary_enc2 rotary_enc2 (clk_62p5mhz, reset, ioc, rte2);
 
 /* buzz module */
-beep beep (clk_62p5mhz, reset, mode, buzz);
+beep beep (clk_125mhz, reset, mode, buzz);
    
 /* cs1 */
 assign	readdata1	= {24'h0, btn, sw};
@@ -351,7 +351,7 @@ always @ (posedge clk_62p5mhz or posedge reset)
 endmodule // rotary_enc2
 
 module beep (
-       input clk_62p5mhz,
+       input clk_125mhz,
        input reset,
        input [7:0] mode,
        output buzz
@@ -373,7 +373,7 @@ assign interval =      (mode ==  1) ? 14931 * 2: /* C  */
                        (mode == 13) ?  7465 * 2: /* C  */
 		       0;
 assign buzz = (mode > 0) && (count < interval / 2) ? 1 : 0;
-always @ (posedge clk_62p5mhz or posedge reset)
+always @ (posedge clk_125mhz or posedge reset)
        if (reset)
                count   <= 0;
        else if (mode > 0)
