@@ -179,9 +179,14 @@ void lcd_set_vbuf_pixel(int row, int col, int r, int g, int b) {
         lcd_vbuf[row][col] = ((r << 5) | (g << 2) | (b << 0)) & 0xff;
 }
 void lcd_clear_vbuf() {
-        for (int row = 0; row < 64; row++)
-                for (int col = 0; col < 96; col++)
-                        lcd_vbuf[row][col] = 0;
+	for (int row = 0; row < 64; row++) {
+		for (int col = 0; col < 96; col++) {
+			if (col == 48)
+				lcd_vbuf[row][col] = '|';
+			else
+				lcd_vbuf[row][col] = 0;
+		}
+	}
 }
 void lcd_sync_vbuf() {
         for (int row = 0; row < 64; row++)
