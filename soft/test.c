@@ -31,24 +31,18 @@ volatile int *led_ptr;
 
 /* interrupt_handler() is called every 100msec */
 void interrupt_handler() {
-	static int cnt;
-	lcd_init();
 	if (state == INIT) {
 	} else if (state == OPENING) {
-		cnt = 0;
 	} else if (state == PLAY) {
 		/* Display a ball */
-		posx = (cnt < 12) ? cnt : 23 - cnt;		
-		show_ball(posx, posy); 
+		posx = 12;		
+		//show_ball(posx, posy);
 		p1_pos = *kypd_ptr;
 		p2_pos = 7;
 		show_player(p1_pos, p2_pos);
-
-		if (++cnt >= 24) {
-			cnt = 0;
-		}
 	} else if (state == ENDING) {
 	}
+
 	lcd_sync_vbuf();
 }
 void lcd_digit3(int y, int x, unsigned int val) {
@@ -61,26 +55,26 @@ void lcd_digit3(int y, int x, unsigned int val) {
        lcd_putc(0, 2, digit1);
 }
 void main() {
+        lcd_init();
         state = INIT; posx = 0; posy = 3; p1_pos = 0; p2_pos = 0;
         rte_ptr1 = (int *)0xff14;
         rte_ptr2 = (int *)0xff1c;
         kypd_ptr = (int *)0xff30;
         led_ptr = (int *)0xff08;
-        volatile int *kypd_ptr = (int *)0xff30;
 	while (1) {
 		if (state == INIT) {
 			lcd_init();
 			state = OPENING;
 		} else if (state == OPENING) {
 			state = PLAY;
-			play_song();
+			//play_song();
 		} else if (state == PLAY) {
-			play();
                         *kypd_ptr = kypd_scan();
+                        //play()
 			//state = ENDING;
 		} /*else if (state == ENDING) {
 			state = OPENING;
-		}*/
+		} show_ball*/
 	}
 }
 //      volatile int *led_ptr = (int *)0xff08;
@@ -93,7 +87,6 @@ void main() {
 //                lcd_sync_vbuf();
 //	}
 void play() {
-        
 	while (1) {		
 		/* Button0 is pushed when the ball is in the left edge */
 		if (posx == 0 && btn_check_0()) {
@@ -180,7 +173,6 @@ void lcd_init() {
         lcd_cmd(63);
         lcd_cmd(0xaf);  /* Display ON */
 }
-unsigned char lcd_vbuf[64][96];
 void lcd_set_vbuf_pixel(int row, int col, int r, int g, int b) {
         r >>= 5; g >>= 5; b >>= 6;
         lcd_vbuf[row][col] = ((r << 5) | (g << 2) | (b << 0)) & 0xff;
@@ -257,13 +249,11 @@ int kypd_scan() {
                 return 0xd;
         return 4;
 }
-
 void beep(int mode) {
         volatile int *iob_ptr = (int *)0xff24;
         *iob_ptr = mode;
         lcd_wait(300000);
 }
-
 void play_song() {
         beep(1);
         beep(4);
