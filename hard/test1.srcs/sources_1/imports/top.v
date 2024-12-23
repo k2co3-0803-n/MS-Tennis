@@ -24,7 +24,7 @@ module fpga_top (
 	output reg [7:0]     iod
 );
 
-wire	[31:0]	pc, instr, readdata, readdata0, readdata1, writedata, dataadr,readdata4, readdata5, readdata6;
+wire	[31:0]	pc, instr, readdata, readdata0, readdata1, writedata, dataadr, readdata4, readdata5, readdata6;
 wire	[3:0]	byteen;
 wire		reset, buzz;
 wire		memwrite, memtoregM, swc, cs0, cs1, cs2, cs3, cs4, cs5, cs6, cs7, irq;

@@ -29,8 +29,9 @@ void interrupt_handler() {
 	static int cnt;
 	volatile int *rte_ptr1 = (int *)0xff14;
 	volatile int *rte_ptr2 = (int *)0xff1c;
-	volatile int *led_ptr = (int *)0xff18;
-        
+        volatile int *kypd_ptr = (int *)0xff30;
+	volatile int *led_ptr = (int *)0xff08;
+
 	lcd_init();
 	if (state == INIT) {
 	} else if (state == OPENING) {
@@ -39,11 +40,10 @@ void interrupt_handler() {
 		/* Display a ball */
 		posx = (cnt < 12) ? cnt : 23 - cnt;		
 		show_ball(posx, posy); 
-		p1_pos = ((*rte_ptr1) >> 2) % 8;
-		p2_pos = ((*rte_ptr2) >> 2) % 8;
+		p1_pos = *kypd_ptr;
+		p2_pos = 7;
 		show_player(p1_pos, p2_pos);
-		*led_ptr = kypd_scan();
-		
+
 		if (++cnt >= 24) {
 			cnt = 0;
 		}
@@ -61,20 +61,23 @@ void lcd_digit3(int y, int x, unsigned int val) {
        lcd_putc(0, 2, digit1);
 }
 void main() {
-  while (1) {
-                if (state == INIT) {
-                        lcd_init();
-                        state = OPENING;
-                } else if (state == OPENING) {
-                        state = PLAY;
+        int state = INIT, posx = 0, posy = 3, p1_pos = 0, p2_pos = 0;
+        volatile int *kypd_ptr = (int *)0xff30;
+	while (1) {
+		if (state == INIT) {
+			lcd_init();
+			state = OPENING;
+		} else if (state == OPENING) {
+			state = PLAY;
 			play_song();
-                } else if (state == PLAY) {
-                        play();
-                        state = ENDING;
-                } else if (state == ENDING) {
-                        state = OPENING;
-                }
-	     }
+		} else if (state == PLAY) {
+			play();
+                        *kypd_ptr = kypd_scan();
+			//state = ENDING;
+		} /*else if (state == ENDING) {
+			state = OPENING;
+		}*/
+	}
 }
 //      volatile int *led_ptr = (int *)0xff08;
 //	volatile int *rte_ptr  = (int *)0xff18;
@@ -252,31 +255,19 @@ int kypd_scan() {
 }
 
 void beep(int mode) {
-        int len;
         volatile int *iob_ptr = (int *)0xff24;
-        switch (mode) {
-        case 1: len = 13304; break;
-        case 2: len = 11851; break;
-        case 3: len = 10554; break;
-        case 4: len =  9949; break;
-        case 5: len =  8880; break;
-        case 6: len =  7891; break;
-        case 7: len =  7029; break;
-        case 8: len =  6639; break;
-        }
-        *iob_ptr = 1;
-        lcd_wait(len);
-        *iob_ptr = 0;
-        lcd_wait(len);
+        *iob_ptr = mode;
+        lcd_wait(300000);
 }
 
 void play_song() {
-        for (int i = 0; i < 250; i++) beep(1);
-                for (int i = 0; i < 250; i++) beep(2);
-                for (int i = 0; i < 250; i++) beep(3);
-                for (int i = 0; i < 250; i++) beep(4);
-                for (int i = 0; i < 250; i++) beep(5);
-                for (int i = 0; i < 250; i++) beep(6);
-                for (int i = 0; i < 250; i++) beep(7);
-                for (int i = 0; i < 250; i++) beep(8);
+        beep(1);
+        beep(4);
+        beep(2);
+        beep(5);
+        beep(3);
+        beep(6);
+        beep(4);
+        beep(7);
+        beep(0);
 }

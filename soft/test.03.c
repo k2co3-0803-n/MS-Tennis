@@ -95,7 +95,6 @@ void main() {
 //                lcd_sync_vbuf();
 //	}
 void play() {
-        
 	while (1) {		
 		/* Button0 is pushed when the ball is in the left edge */
 		if (posx == 0 && btn_check_0()) {
