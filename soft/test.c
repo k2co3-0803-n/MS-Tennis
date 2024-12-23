@@ -254,22 +254,3 @@ int kypd_scan() {
                 return 0xd;
         return 0;
 }
-
-void beep(int mode) {
-        int len;
-        volatile int *iob_ptr = (int *)0xff24;
-        switch (mode) {
-        case 1: len = 13304; break;
-        case 2: len = 11851; break;
-        case 3: len = 10554; break;
-        case 4: len =  9949; break;
-        case 5: len =  8880; break;
-        case 6: len =  7891; break;
-        case 7: len =  7029; break;
-        case 8: len =  6639; break;
-        }
-        *iob_ptr = 1;
-        lcd_wait(len);
-        *iob_ptr = 0;
-        lcd_wait(len);
-}
