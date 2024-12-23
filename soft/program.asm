@@ -999,39 +999,16 @@ font8x8:
 	.byte	85
 	.byte	-86
 	.byte	85
-	.globl	state
-	.section	.bss,"aw",@nobits
-	.align	2
-	.type	state, @object
-	.size	state, 4
-state:
-	.space	4
-	.globl	posx
-	.align	2
-	.type	posx, @object
-	.size	posx, 4
-posx:
-	.space	4
-	.globl	posy
-	.data
-	.align	2
-	.type	posy, @object
-	.size	posy, 4
-posy:
-	.word	3
-	.globl	p1_pos
-	.section	.bss
-	.align	2
-	.type	p1_pos, @object
-	.size	p1_pos, 4
-p1_pos:
-	.space	4
-	.globl	p2_pos
-	.align	2
-	.type	p2_pos, @object
-	.size	p2_pos, 4
-p2_pos:
-	.space	4
+
+	.comm	state,4,4
+
+	.comm	posx,4,4
+
+	.comm	posy,4,4
+
+	.comm	p1_pos,4,4
+
+	.comm	p2_pos,4,4
 	.text
 	.align	2
 	.globl	interrupt_handler
@@ -1291,25 +1268,31 @@ $L21:
 	.ent	main
 	.type	main, @function
 main:
-	.frame	$fp,48,$31		# vars= 24, regs= 2/0, args= 16, gp= 0
+	.frame	$fp,32,$31		# vars= 8, regs= 2/0, args= 16, gp= 0
 	.mask	0xc0000000,-4
 	.fmask	0x00000000,0
 	.set	noreorder
 	.set	nomacro
-	addiu	$sp,$sp,-48
-	sw	$31,44($sp)
-	sw	$fp,40($sp)
+	addiu	$sp,$sp,-32
+	sw	$31,28($sp)
+	sw	$fp,24($sp)
 	move	$fp,$sp
-	sw	$0,16($fp)
-	sw	$0,20($fp)
-	li	$2,3			# 0x3
-	sw	$2,24($fp)
-	sw	$0,28($fp)
-	sw	$0,32($fp)
+	lui	$2,%hi(state)
+	sw	$0,%lo(state)($2)
+	lui	$2,%hi(posx)
+	sw	$0,%lo(posx)($2)
+	lui	$2,%hi(posy)
+	li	$3,3			# 0x3
+	sw	$3,%lo(posy)($2)
+	lui	$2,%hi(p1_pos)
+	sw	$0,%lo(p1_pos)($2)
+	lui	$2,%hi(p2_pos)
+	sw	$0,%lo(p2_pos)($2)
 	li	$2,65328			# 0xff30
-	sw	$2,36($fp)
+	sw	$2,16($fp)
 $L26:
-	lw	$2,16($fp)
+	lui	$2,%hi(state)
+	lw	$2,%lo(state)($2)
 	nop
 	bne	$2,$0,$L23
 	nop
@@ -1317,19 +1300,22 @@ $L26:
 	jal	lcd_init
 	nop
 
-	li	$2,1			# 0x1
-	sw	$2,16($fp)
+	lui	$2,%hi(state)
+	li	$3,1			# 0x1
+	sw	$3,%lo(state)($2)
 	b	$L26
 	nop
 
 $L23:
-	lw	$3,16($fp)
+	lui	$2,%hi(state)
+	lw	$3,%lo(state)($2)
 	li	$2,1			# 0x1
 	bne	$3,$2,$L25
 	nop
 
-	li	$2,2			# 0x2
-	sw	$2,16($fp)
+	lui	$2,%hi(state)
+	li	$3,2			# 0x2
+	sw	$3,%lo(state)($2)
 	jal	play_song
 	nop
 
@@ -1337,7 +1323,8 @@ $L23:
 	nop
 
 $L25:
-	lw	$3,16($fp)
+	lui	$2,%hi(state)
+	lw	$3,%lo(state)($2)
 	li	$2,2			# 0x2
 	bne	$3,$2,$L26
 	nop
@@ -1349,7 +1336,7 @@ $L25:
 	nop
 
 	move	$3,$2
-	lw	$2,36($fp)
+	lw	$2,16($fp)
 	nop
 	sw	$3,0($2)
 	b	$L26
@@ -2713,7 +2700,7 @@ $L107:
 	nop
 
 $L108:
-	move	$2,$0
+	li	$2,4			# 0x4
 $L87:
 	move	$sp,$fp
 	lw	$fp,28($sp)

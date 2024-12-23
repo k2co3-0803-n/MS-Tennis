@@ -22,16 +22,16 @@ void lcd_clear_vbuf();
 #define PLAY	2
 #define ENDING	3
 
-int state = INIT, posx = 0, posy = 3, p1_pos = 0, p2_pos = 0;
+int state, posx, posy, p1_pos, p2_pos;
+volatile int *rte_ptr1;
+volatile int *rte_ptr2;
+volatile int *kypd_ptr;
+volatile int *led_ptr;
+
 
 /* interrupt_handler() is called every 100msec */
 void interrupt_handler() {
 	static int cnt;
-	volatile int *rte_ptr1 = (int *)0xff14;
-	volatile int *rte_ptr2 = (int *)0xff1c;
-        volatile int *kypd_ptr = (int *)0xff30;
-	volatile int *led_ptr = (int *)0xff08;
-
 	lcd_init();
 	if (state == INIT) {
 	} else if (state == OPENING) {
@@ -61,7 +61,11 @@ void lcd_digit3(int y, int x, unsigned int val) {
        lcd_putc(0, 2, digit1);
 }
 void main() {
-        int state = INIT, posx = 0, posy = 3, p1_pos = 0, p2_pos = 0;
+        state = INIT; posx = 0; posy = 3; p1_pos = 0; p2_pos = 0;
+        rte_ptr1 = (int *)0xff14;
+        rte_ptr2 = (int *)0xff1c;
+        kypd_ptr = (int *)0xff30;
+        led_ptr = (int *)0xff08;
         volatile int *kypd_ptr = (int *)0xff30;
 	while (1) {
 		if (state == INIT) {
@@ -251,7 +255,7 @@ int kypd_scan() {
                 return 0xc;
         if ((*iob_ptr & 0x10) == 0)
                 return 0xd;
-        return 0;
+        return 4;
 }
 
 void beep(int mode) {
