@@ -117,30 +117,17 @@ void play()
 		a = kypd_scan();
 		*led_ptr = a;
 
-		if (*rte_ptr1 & mask)) {
+		if (*rte_ptr1 & mask) {
+			*led_ptr = *rte_ptr1 & mask;
 			vecx *= -1;
 		}
 
 		if (*rte_ptr2 & mask) {
+			*led_ptr = *rte_ptr2 & mask;
 			vecx *= -1;
 		}
 	}
 }
-
-/*
-void play()
-{
-        while (1) {    
-                if (posx == 0 && btn_check_0()) {
-                        led_blink();
-                } else if (posx == 11 && btn_check_3()) {
-						led_blink();
-                } else if (btn_check_1()) {
-						break;
-                }
-        }
-}
-*/
 
 void show_ball(int posx, int posy)
 {
