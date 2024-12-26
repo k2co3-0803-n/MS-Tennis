@@ -117,7 +117,7 @@ void play()
 		a = kypd_scan();
 		*led_ptr = a;
 
-		if (*rte_ptr1 & mask) {
+		if (*rte_ptr1 & mask)) {
 			vecx *= -1;
 		}
 
