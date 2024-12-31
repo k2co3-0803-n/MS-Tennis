@@ -101,6 +101,7 @@ void main()
 	rte_ptr2 = (int *)0xff1c;
 	kypd_ptr = (int *)0xff30;
 	led_ptr = (int *)0xff08;
+    volatile int *ptr = (int *)0xff24;
 	lcd_init();
 	
 	while (1) {
@@ -138,6 +139,8 @@ void main()
 		} else if (state == XXXXX) {
 			play();
 			state = ENDING;
+            *ptr = 6;
+            *ptr = 2;
 		} else if (state == ENDING) {
             lcd_clear_vbuf();
             lcd_puts(0 ,0, "GAME IS OVER", 255, 255, 255);
@@ -192,16 +195,16 @@ void play()
                 vecy = angle1;
                 if (posy == p1_pos) {point1 += 2;}
                 else {point1++;}
-                *ptr = 1;
+                *ptr = 3;
                 *led_ptr = 3;
                 lcd_wait(100000);
-                *ptr = 5;
+                //*ptr = 5;
                 *led_ptr = 0;
                 lcd_wait(100000);
-                *ptr = 8;
+                //*ptr = 8;
                 *led_ptr = 3;
                 lcd_wait(100000);
-                *ptr = 13;
+                //*ptr = 13;
                 *led_ptr = 0;
                 lcd_wait(100000);
                 *ptr = 0;
@@ -214,16 +217,16 @@ void play()
                 vecy = angle2;
                 if (posy == p2_pos) {point2 += 2;}
                 else {point2++;}
-                *ptr = 1;
+                *ptr = 4;
                 *led_ptr = 12;
                 lcd_wait(100000);
-                *ptr = 5;
+                //*ptr = 5;
                 *led_ptr = 0;
                 lcd_wait(100000);
-                *ptr = 8;
+                //*ptr = 8;
                 *led_ptr = 12;
                 lcd_wait(100000);
-                *ptr = 13;
+                //*ptr = 13;
                 *led_ptr = 0;
                 lcd_wait(100000);
                 *ptr = 0;
@@ -488,22 +491,9 @@ int kypd_scan()
         return 0;
 }
 
-void beep(int mode)
-{
-        volatile int *iob_ptr = (int *)0xff24;
-        *iob_ptr = mode;
-        lcd_wait(8000);
-}
-
 void play_song()
 {
-        beep(1);
-        beep(3);
-        beep(5);
-        beep(6);
-        beep(8);
-        beep(10);
-        beep(12);
-        beep(13);
-        beep(0);
+        volatile int *iob_ptr = (int *)0xff24;
+        *iob_ptr = 5;
+        *iob_ptr = 1;
 }
